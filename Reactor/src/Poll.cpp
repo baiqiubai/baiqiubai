@@ -1,0 +1,132 @@
+
+#include "Poll.h"
+#include "Channel.h"
+
+#include <assert.h>
+#include <unistd.h>
+namespace net {
+
+Poll::Poll()
+:Poller(){
+
+
+}
+Poll::~Poll(){
+
+
+}
+void Poll::update(Channel *channel)
+{
+    if (channel->index() < 0) {  // new add
+
+        int fd = channel->fd();
+        struct pollfd pfd;
+
+        pfd.fd = fd;
+        pfd.events = channel->events();
+        pfd.revents = 0;
+
+        pollfds_.emplace_back(pfd);
+        
+        int index = static_cast<int>(pollfds_.size()) - 1;
+    
+        channel->setIndex(index);
+
+        channelMap_.insert({fd, channel});
+    }
+    else {
+        int index = channel->index();
+        struct pollfd &pfd = pollfds_[index];
+
+        pfd.fd = channel->fd();
+
+        pfd.events =channel->events();
+        pfd.revents = 0;
+        
+        
+        if(channel->isNoneEvent()){
+            pfd.fd=-1; 
+        }
+        
+    }
+}
+void Poll::remove(Channel *channel)
+{
+    if (pollfds_.size() > 0) {
+        assert(channel->fd() >= 0);
+        
+    
+        int fd = channel->fd();
+        int index = channel->index();
+        if (channel->index() == static_cast<int>(pollfds_.size()) - 1) {
+            
+            pollfds_.pop_back();
+        }
+        else {
+            
+            
+            int endfd = pollfds_.back().fd;
+            std::swap(pollfds_[index], pollfds_.back());
+            channelMap_[endfd]->setIndex(index);  //设置为删除掉channel的index
+            pollfds_.pop_back();
+        }
+        size_t n = channelMap_.erase(fd);
+        assert(n == 1);
+    }
+}
+// void Poll::fillActiveChannel(std::vector<Channel *> *signalChannel,
+                               // std::vector<Channel *> *timerChannel,
+                               // std::vector<Channel *> *activeChannel,
+                               // int nready)
+void Poll::fillActiveChannel(std::vector<Channel*> *activeChannel,int nready)
+{
+    for (auto it = pollfds_.begin(); it != pollfds_.end(); ++it) {
+        if (it->revents > 0) {
+            int fd = it->fd;
+
+            int revents = it->revents;
+        
+            auto pos = channelMap_.find(fd);
+            if(pos==channelMap_.end())printf("fd %d\n",fd);
+            assert(pos != channelMap_.end());
+
+            assert(pos->first == fd);
+
+            pos->second->setRevents(revents);
+
+            // if (fd == signalSocketPair_)
+                // signalChannel->emplace_back(pos->second);
+            // else if (fd == timerfd_) {
+                // timerChannel->emplace_back(pos->second);
+            // }
+            // else {
+                activeChannel->emplace_back(pos->second);
+            // }
+        }
+    }
+}
+void Poll::poll(std::vector<Channel*> * activeChannel,
+int timeout)
+// void Poll::poll(std::vector<Channel *> *signalChannel,
+                  // std::vector<Channel *> *timerChannel,
+                  // std::vector<Channel *> *activeChannel, int timeout)
+{
+    // again:
+
+    int nready = ::poll(&*pollfds_.begin(), pollfds_.size(), timeout);
+
+    if (nready > 0) {
+        fillActiveChannel(activeChannel,nready);
+        // fillActiveChannel(signalChannel, timerChannel, activeChannel, nready);
+    }
+    else if (nready < 0) {
+        if (errno == EINTR) {
+            // goto again;
+        }
+        else {
+            perror("poll error");
+        }
+    }
+}
+
+}  // namespace net

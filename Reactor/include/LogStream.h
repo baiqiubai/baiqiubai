@@ -22,10 +22,11 @@ class FixedBuffer{
                 cur_+=len;
                 heap_[size_-1]='\0';
             }else {
-                makeHeap(len);
+                //导致效率慢
+                /*makeHeap(len);
                 memcpy(cur_,msg,len);
-                cur_+=len;
-                heap_[size_-1]='\0';
+                cu r_+=len;
+                heap_[size_-1]='\0';*/
             }
             
         }
@@ -50,7 +51,7 @@ class FixedBuffer{
             int startIndex=cur_-heap_;
      
             while(valid()<len){
-                size_*=2; 
+                size_*=10; 
             }
             heap_=new char[size_];
             memcpy(heap_,old,startIndex);

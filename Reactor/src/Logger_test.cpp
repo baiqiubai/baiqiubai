@@ -27,7 +27,7 @@ void ChangeFlush(){
     
 }
 
-void test(char* type,int num){
+void test (const char* type,int num){
 
     Logger::setLogLevel(Logger::LogLevel::TRACE);
     Logger::setOutput(ChangeOutput);
@@ -59,7 +59,7 @@ int main(int argc,char**argv){
         
     // test(type,num);
     // bool empty=atoi(argv[2]) > 0;
-    char *ttype="/dev/null";
+    const char *ttype="/dev/null";
     test(ttype,num);
 
 }

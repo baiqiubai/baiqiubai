@@ -114,8 +114,8 @@ int main(int argc,char**argv){
 
 
     // test();
-//  test1();
-    test3(atoi(argv[1]));
+ test1();
+    // test3(atoi(argv[1]));
 
 
 

@@ -51,6 +51,8 @@ void test3(){
     buffer.append(buf,sizeof(buf));
     printf("buffer.valid %d,%s,size=%ld\n",buffer.valid(),buffer.data(),buffer.size());
 }
+
+        
 int main(){
 
     // test();

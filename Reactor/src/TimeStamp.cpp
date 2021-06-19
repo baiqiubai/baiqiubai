@@ -58,14 +58,14 @@ double timeDifference(const TimeStamp&t1,const TimeStamp&t2){
     
     double dif=0;
 
-  /*  if(t1 <  t2 ){
+   if(t1 <  t2 ){
     
         dif=static_cast<double>(t2.microSeconds()-t1.microSeconds())/TimeStamp::kSecondsToMicroSeconds;
     
     }else 
         dif=static_cast<double>(t1.microSeconds()-t2.microSeconds())/TimeStamp::kSecondsToMicroSeconds;
-*/
-    dif=static_cast<double>(t1.microSeconds()-t2.microSeconds())/TimeStamp::kSecondsToMicroSeconds;
+
+    // dif=static_cast<double>(t1.microSeconds()-t2.microSeconds())/TimeStamp::kSecondsToMicroSeconds;
     return dif;
 
 }

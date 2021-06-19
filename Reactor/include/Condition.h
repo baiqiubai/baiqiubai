@@ -45,6 +45,6 @@ class Condition : noncopyable
   pthread_cond_t pcond_;
 };
 
-}  // namespace muduo
+}
 
-#endif  // MUDUO_BASE_CONDITION_H
+#endif  

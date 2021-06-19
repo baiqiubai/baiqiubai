@@ -7,16 +7,16 @@
 namespace base {
 
 __thread time_t t_lastTime=0;
-__thread char t_Seconds[32];
-const char *LogLevel[Logger::LogLevel::LOG_NUMS]
+__thread char t_Seconds[32]={0};
+const char *logLevel[Logger::LogLevel::LOG_NUMS]
 ={
 
-    "LOG_TRACE",
-    "LOG_DEBUG",
-    "LOG_INFO",
-    "LOG_WARN",
-    "LOG_ERROR",
-    "LOG_SYSFATAL"
+    "TRACE",
+    "DEBUG",
+    "INFO",
+    "WARN",
+    "ERROR",
+    "SYSFATAL"
 
 };
 static Logger::LogLevel initLogLevel(){
@@ -46,7 +46,7 @@ nowTime_(TimeStamp::now()){
 
     
     toFormatTime();
-    stream_<<CurrentThread::tid()<<" ";
+    stream_<<CurrentThread::tid()<<" "<<logLevel[LogLevel_]<<" ";
             
 
 }
@@ -59,7 +59,7 @@ line_(line),
 func_(NULL),
 nowTime_(TimeStamp::now()){
     toFormatTime();
-    stream_<<CurrentThread::tid()<<" ";
+    stream_<<CurrentThread::tid()<<" "<<logLevel[LogLevel_]<<" ";
 
 
 
