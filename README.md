@@ -1,0 +1,4 @@
+
+这是模仿陈硕大佬的muduo网络库写的一个
+由于大佬的muduo缺乏信号处理 buffer也不是很高效 
+之后会参考libevent的buffer设计 
