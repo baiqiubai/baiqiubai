@@ -1,0 +1,1 @@
+/usr/bin/c++     CMakeFiles/AsyncLogging_test.dir/src/tests/AsyncLogging_test.cpp.o  -o ../bin/AsyncLogging_test libReactorTcp.a -lpthread 

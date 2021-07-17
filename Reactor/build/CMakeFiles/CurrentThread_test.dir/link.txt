@@ -1,0 +1,1 @@
+/usr/bin/c++     CMakeFiles/CurrentThread_test.dir/src/tests/CurrentThread_test.cpp.o  -o ../bin/CurrentThread_test libReactorTcp.a -lpthread 

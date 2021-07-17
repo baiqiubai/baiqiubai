@@ -1,5 +1,0 @@
-
-CC=g++
-VPATH=src:include
-
-

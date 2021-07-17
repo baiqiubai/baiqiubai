@@ -1,0 +1,1 @@
+/usr/bin/c++     CMakeFiles/Logger_test.dir/src/tests/Logger_test.cpp.o  -o ../bin/Logger_test libReactorTcp.a -lpthread 

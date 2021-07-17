@@ -1,0 +1,46 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+../include/Condition.h
+Mutex.h
+../include/Mutex.h
+pthread.h
+-
+
+../include/CountDownLatch.h
+Condition.h
+../include/Condition.h
+Mutex.h
+../include/Mutex.h
+
+../include/CurrentThread.h
+iostream
+-
+
+../include/Mutex.h
+noncopyable.h
+../include/noncopyable.h
+assert.h
+-
+pthread.h
+-
+
+../include/noncopyable.h
+
+/home/baiqiubai/baiqiubai/Reactor/src/tests/CountDownLatch_test.cpp
+CountDownLatch.h
+/home/baiqiubai/baiqiubai/Reactor/src/tests/CountDownLatch.h
+CurrentThread.h
+/home/baiqiubai/baiqiubai/Reactor/src/tests/CurrentThread.h
+vector
+-
+thread
+-
+unistd.h
+-
+

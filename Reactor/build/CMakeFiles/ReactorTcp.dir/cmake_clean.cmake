@@ -1,0 +1,40 @@
+file(REMOVE_RECURSE
+  "CMakeFiles/ReactorTcp.dir/src/Acceptor.cpp.o"
+  "CMakeFiles/ReactorTcp.dir/src/AsyncLogging.cpp.o"
+  "CMakeFiles/ReactorTcp.dir/src/Buffer.cpp.o"
+  "CMakeFiles/ReactorTcp.dir/src/Channel.cpp.o"
+  "CMakeFiles/ReactorTcp.dir/src/Condition.cpp.o"
+  "CMakeFiles/ReactorTcp.dir/src/Connector.cpp.o"
+  "CMakeFiles/ReactorTcp.dir/src/CountDownLatch.cpp.o"
+  "CMakeFiles/ReactorTcp.dir/src/CurrentThread.cpp.o"
+  "CMakeFiles/ReactorTcp.dir/src/DefaultPoller.cpp.o"
+  "CMakeFiles/ReactorTcp.dir/src/Epoll.cpp.o"
+  "CMakeFiles/ReactorTcp.dir/src/EventLoop.cpp.o"
+  "CMakeFiles/ReactorTcp.dir/src/EventLoopThreadPool.cpp.o"
+  "CMakeFiles/ReactorTcp.dir/src/EventThreadLoop.cpp.o"
+  "CMakeFiles/ReactorTcp.dir/src/FileUtil.cpp.o"
+  "CMakeFiles/ReactorTcp.dir/src/InetAddress.cpp.o"
+  "CMakeFiles/ReactorTcp.dir/src/LogFile.cpp.o"
+  "CMakeFiles/ReactorTcp.dir/src/LogStream.cpp.o"
+  "CMakeFiles/ReactorTcp.dir/src/Logger.cpp.o"
+  "CMakeFiles/ReactorTcp.dir/src/Poll.cpp.o"
+  "CMakeFiles/ReactorTcp.dir/src/Poller.cpp.o"
+  "CMakeFiles/ReactorTcp.dir/src/Signal.cpp.o"
+  "CMakeFiles/ReactorTcp.dir/src/Socket.cpp.o"
+  "CMakeFiles/ReactorTcp.dir/src/SocketOps.cpp.o"
+  "CMakeFiles/ReactorTcp.dir/src/TcpClient.cpp.o"
+  "CMakeFiles/ReactorTcp.dir/src/TcpConnection.cpp.o"
+  "CMakeFiles/ReactorTcp.dir/src/TcpServer.cpp.o"
+  "CMakeFiles/ReactorTcp.dir/src/Thread.cpp.o"
+  "CMakeFiles/ReactorTcp.dir/src/ThreadPool.cpp.o"
+  "CMakeFiles/ReactorTcp.dir/src/TimeStamp.cpp.o"
+  "CMakeFiles/ReactorTcp.dir/src/Timer.cpp.o"
+  "CMakeFiles/ReactorTcp.dir/src/TimerQueue.cpp.o"
+  "libReactorTcp.pdb"
+  "libReactorTcp.a"
+)
+
+# Per-language clean rules from dependency scanning.
+foreach(lang CXX)
+  include(CMakeFiles/ReactorTcp.dir/cmake_clean_${lang}.cmake OPTIONAL)
+endforeach()

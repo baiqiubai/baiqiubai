@@ -1,0 +1,26 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+../include/LogStream.h
+iostream
+-
+cstring
+-
+
+../include/ResourceLimit.h
+sys/resource.h
+-
+cstdio
+-
+
+/home/baiqiubai/baiqiubai/Reactor/src/tests/FixedBuffer_test.cpp
+LogStream.h
+/home/baiqiubai/baiqiubai/Reactor/src/tests/LogStream.h
+ResourceLimit.h
+/home/baiqiubai/baiqiubai/Reactor/src/tests/ResourceLimit.h
+

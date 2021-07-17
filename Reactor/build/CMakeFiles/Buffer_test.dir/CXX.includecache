@@ -1,0 +1,30 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+../include/Buffer.h
+noncopyable.h
+../include/noncopyable.h
+sys/uio.h
+-
+functional
+-
+iostream
+-
+cstring
+-
+
+../include/noncopyable.h
+
+/home/baiqiubai/baiqiubai/Reactor/src/tests/Buffer_test.cpp
+Buffer.h
+/home/baiqiubai/baiqiubai/Reactor/src/tests/Buffer.h
+cstdio
+-
+cstring
+-
+

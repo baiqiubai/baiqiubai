@@ -1,0 +1,38 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+../include/FileUtil.h
+iostream
+-
+
+../include/LogStream.h
+iostream
+-
+cstring
+-
+
+../include/Logger.h
+cstring
+-
+TimeStamp.h
+../include/TimeStamp.h
+LogStream.h
+../include/LogStream.h
+
+../include/TimeStamp.h
+iostream
+-
+
+/home/baiqiubai/baiqiubai/Reactor/src/tests/FileUtil_test.cpp
+FileUtil.h
+/home/baiqiubai/baiqiubai/Reactor/src/tests/FileUtil.h
+Logger.h
+/home/baiqiubai/baiqiubai/Reactor/src/tests/Logger.h
+TimeStamp.h
+/home/baiqiubai/baiqiubai/Reactor/src/tests/TimeStamp.h
+

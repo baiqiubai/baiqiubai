@@ -1,0 +1,40 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+../include/Condition.h
+Mutex.h
+../include/Mutex.h
+pthread.h
+-
+
+../include/Mutex.h
+noncopyable.h
+../include/noncopyable.h
+assert.h
+-
+pthread.h
+-
+
+../include/noncopyable.h
+
+/home/baiqiubai/baiqiubai/Reactor/src/tests/Mutex_test.cpp
+Mutex.h
+/home/baiqiubai/baiqiubai/Reactor/src/tests/Mutex.h
+Condition.h
+/home/baiqiubai/baiqiubai/Reactor/src/tests/Condition.h
+unistd.h
+-
+iostream
+-
+thread
+-
+vector
+-
+deque
+-
+

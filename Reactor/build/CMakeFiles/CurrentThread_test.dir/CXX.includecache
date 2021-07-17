@@ -1,0 +1,42 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+../include/CurrentThread.h
+iostream
+-
+
+../include/Mutex.h
+noncopyable.h
+../include/noncopyable.h
+assert.h
+-
+pthread.h
+-
+
+../include/TimeStamp.h
+iostream
+-
+
+../include/noncopyable.h
+
+/home/baiqiubai/baiqiubai/Reactor/src/tests/CurrentThread_test.cpp
+CurrentThread.h
+/home/baiqiubai/baiqiubai/Reactor/src/tests/CurrentThread.h
+TimeStamp.h
+/home/baiqiubai/baiqiubai/Reactor/src/tests/TimeStamp.h
+Mutex.h
+/home/baiqiubai/baiqiubai/Reactor/src/tests/Mutex.h
+vector
+-
+pthread.h
+-
+unistd.h
+-
+sys/types.h
+-
+

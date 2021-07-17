@@ -1,0 +1,1 @@
+/usr/bin/c++     CMakeFiles/Buffer_test.dir/src/tests/Buffer_test.cpp.o  -o ../bin/Buffer_test libReactorTcp.a -lpthread 
