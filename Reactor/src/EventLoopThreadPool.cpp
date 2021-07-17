@@ -36,7 +36,6 @@ namespace net {
             loops_.push_back(threads_[i]->startLoop());  
         }
     
-    
     }
     EventLoop* EventLoopThreadPool::getNextLoop(){
     

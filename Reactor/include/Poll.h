@@ -18,7 +18,6 @@ class Poll:public Poller{
 
 
     public:
-        using Functor=std::function<void()>;
         
         Poll();
         ~Poll();

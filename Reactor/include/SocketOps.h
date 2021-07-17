@@ -20,8 +20,7 @@ int accept(int sockfd,InetAddress *address);
 int accept(int sockfd);
 int connect(int sockfd,InetAddress *address);
 void shutdown(int sockfd);
-
-
+void setNonBlocking(int sockfd);
 void inet_pton(int af, const char *src, void *dst);
 void inet_ntop(int af, const void *src,char *dst, socklen_t size);
 

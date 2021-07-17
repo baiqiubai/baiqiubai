@@ -23,9 +23,7 @@ void message(const TcpConnectionPtr &conn,Buffer *buffer){
 
 
     cout<<"message "<<CurrentThread::tid()<<"\n";
-    std::string result("hello wolrd");
 
-    conn->send(result);
 
 }
 int main(int argc,char**argv){

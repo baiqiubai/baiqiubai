@@ -2,18 +2,19 @@
 CC=g++
 OBJ=Mutex_test.o TimeStamp.o TimeStamp_test.o CurrentThread.o CountDownLatch.o Thread.o \
 	CountDownLatch_test.o ThreadPool.o LogStream.o Logger.o FileUtil.o LogFile.o AsyncLogging.o Timer.o EventLoop.o Channel.o Poll.o\
-	Poller.o Epoll.o DefaultPoller.o \
-	TimerQueue.o signal.o Socket.o SocketOps.o InetAddress.o Acceptor.o TcpServer.o \
+	Poller.o Epoll.o DefaultPoller.o Signal.o  \
+	TimerQueue.o Socket.o SocketOps.o InetAddress.o Acceptor.o TcpServer.o \
 	TcpConnection.o Buffer.o Connector.o TcpClient.o EventThreadLoop.o EventLoopThreadPool.o \
 	CountDownLatch_test Mutex_test TimeStamp_test CurrentThread_test Thread_test ThreadPool_test \
 	FixedBuffer_test LogStream_test Logger_test FileUtil_test LogFile_test  AsyncLogging_test \
-	TimerQueue_test Signal_test Priority_test Acceptor_test TcpConnection_test TcpServer_test Buffer_test\
-	Connector_test TcpClient_test EventLoop_test EventThreadLoop_test EventLoopThreadPool_test
+	TimerQueue_test Acceptor_test TcpConnection_test TcpServer_test Buffer_test\
+	Connector_test TcpClient_test EventLoop_test EventThreadLoop_test EventLoopThreadPool_test SignalFd_test \
+	TcpClient1_test
 
 LIBS=-lpthread
 CFLAGS=-g -Wall
 VPATH=src:include
-
+HEADERS:=include/Connector.h
 CINCLUDES=-I/include
 all:$(OBJ)
 
@@ -51,7 +52,7 @@ AsyncLogging.o:AsyncLogging.cpp Logger.cpp FileUtil.cpp LogStream.cpp Logger.cpp
 	$(CC) $(CFLAGS) -c $^ -I  include/
 Timer.o:Timer.cpp TimeStamp.cpp 
 	$(CC) $(CFLAGS) -c $^ -I  include/
-EventLoop.o:Channel.cpp Poller.cpp DefaultPoller.cpp Poll.cpp Epoll.cpp  Timer.cpp TimerQueue.cpp TimeStamp.cpp EventLoop.cpp Mutex.h Logger.cpp LogStream.cpp 
+EventLoop.o:Channel.cpp Poller.cpp DefaultPoller.cpp Poll.cpp Epoll.cpp  Timer.cpp TimerQueue.cpp TimeStamp.cpp EventLoop.cpp Mutex.h Logger.cpp LogStream.cpp Signal.cpp 
 	$(CC) $(CFLAGS) -c $^ -I  include/
 Channel.o:Channel.cpp EventLoop.cpp 
 	$(CC) $(CFLAGS) -c $^ -I  include/
@@ -63,9 +64,9 @@ Epoll.o:Epoll.cpp Channel.cpp Poller.cpp
 	$(CC) $(CFLAGS) -c $^ -I  include/
 DefaultPoller.o:DefaultPoller.cpp Epoll.cpp Poll.cpp 
 	$(CC) $(CFLAGS) -c $^ -I  include/
-TimerQueue.o:TimerQueue.cpp Timer.cpp Channel.cpp Logger.cpp LogStream.cpp TimeStamp.cpp  
+Signal.o:Signal.cpp EventLoop.cpp Channel.cpp 
 	$(CC) $(CFLAGS) -c $^ -I  include/
-signal.o:signal.cpp EventLoop.cpp Channel.cpp 
+TimerQueue.o:TimerQueue.cpp Timer.cpp Channel.cpp Logger.cpp LogStream.cpp TimeStamp.cpp  
 	$(CC) $(CFLAGS) -c $^ -I  include/
 Socket.o:Socket.cpp SocketOps.cpp 
 	$(CC) $(CFLAGS) -c $^ -I  include/
@@ -73,16 +74,16 @@ SocketOps.o:SocketOps.cpp
 	$(CC) $(CFLAGS) -c $^ -I  include/
 InetAddress.o:InetAddress.cpp 
 	$(CC) $(CFLAGS) -c $^ -I  include/
-Acceptor.o:Acceptor.cpp InetAddress.cpp Socket.cpp Channel.cpp 
+Acceptor.o:Acceptor.cpp InetAddress.cpp Socket.cpp Channel.cpp LogStream.cpp Logger.cpp 
 	$(CC) $(CFLAGS) -c $^ -I  include/
 TcpServer.o:TcpServer.cpp Acceptor.cpp 
 	$(CC) $(CFLAGS) -c $^ -I  include/
 TcpConnection.o:TcpConnection.cpp InetAddress.cpp EventLoop.cpp Channel.cpp Logger.cpp LogStream.cpp
 	$(CC) $(CFLAGS) -c $^ -I  include/
-Buffer.o:Buffer.cpp 
+Buffer.o:Buffer.cpp Logger.cpp LogStream.cpp 
 	$(CC) $(CFLAGS) -c $^ -I  include/
-Connector.o:Connector.cpp EventLoop.cpp Channel.cpp Socket.cpp SocketOps.cpp InetAddress.cpp Connector.h
-	$(CC) $(CFLAGS) -c $^ -I  include/
+Connector.o:Connector.cpp  EventLoop.cpp Channel.cpp Socket.cpp SocketOps.cpp InetAddress.cpp ${HEADERS}
+	$(CC) $(CFLAGS) -c $^  -I include/ 
 TcpClient.o:TcpClient.cpp Connector.cpp EventLoop.cpp Channel.cpp 
 	$(CC) $(CFLAGS) -c $^ -I  include/
 EventThreadLoop.o:EventLoop.cpp EventThreadLoop.cpp Condition.cpp 
@@ -133,51 +134,55 @@ AsyncLogging_test:AsyncLogging.o Thread.o LogFile.o CurrentThread.o FileUtil.o C
 
 TimerQueue_test.o:TimerQueue_test.cpp 
 	$(CC) $(CFLAGS) -c $^ -I  include/ 
-TimerQueue_test:TimerQueue_test.o  EventLoop.o CurrentThread.o TimeStamp.o TimerQueue.o Timer.o  Channel.o DefaultPoller.o Poller.o Poll.o Epoll.o signal.o Logger.o LogStream.o
+TimerQueue_test:TimerQueue_test.o  EventLoop.o CurrentThread.o TimeStamp.o TimerQueue.o Timer.o  Channel.o DefaultPoller.o Poller.o Poll.o Epoll.o Signal.o Logger.o LogStream.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LIBS)
-Signal_test.o:Signal_test.cpp 
-	$(CC) $(CFLAGS) -c $^ -I  include/ 
-Signal_test:Signal_test.o signal.o EventLoop.o DefaultPoller.o Poller.o Epoll.o Poll.o CurrentThread.o TimeStamp.o Channel.o TimerQueue.o Timer.o Logger.o LogStream.o 
-	$(CC) $(CFLAGS) $^ -o $@ $(LIBS)
-Priority_test.o:Priority_test.cpp 
-	$(CC) $(CFLAGS) -c $^ -I  include/ 
-Priority_test:Priority_test.o EventLoop.o TimerQueue.o Timer.o CurrentThread.o TimeStamp.o Channel.o DefaultPoller.o Poller.o Epoll.o Poll.o signal.o Logger.o LogStream.o 
-	$(CC) $(CFLAGS) $^ -o $@ $(LIBS)
+# Signal_test.o:Signal_test.cpp
+	# $(CC) $(CFLAGS) -c $^ -I  include/
+# Signal_test:Signal_test.o signal.o EventLoop.o DefaultPoller.o Poller.o Epoll.o Poll.o CurrentThread.o TimeStamp.o Channel.o TimerQueue.o Timer.o Logger.o LogStream.o
+	# $(CC) $(CFLAGS) $^ -o $@ $(LIBS)
 Acceptor_test.o:Acceptor_test.cpp 
 	$(CC) $(CFLAGS) -c $^ -I  include/ 
-Acceptor_test:Acceptor_test.o Acceptor.o Channel.o Poller.o DefaultPoller.o Epoll.o Poll.o EventLoop.o TimerQueue.o Timer.o signal.o  CurrentThread.o TimeStamp.o SocketOps.o InetAddress.o Socket.o Logger.o LogStream.o 
+Acceptor_test:Acceptor_test.o Acceptor.o Channel.o Poller.o DefaultPoller.o Epoll.o Poll.o EventLoop.o TimerQueue.o Timer.o Signal.o  CurrentThread.o TimeStamp.o SocketOps.o InetAddress.o Socket.o Logger.o LogStream.o 
 	$(CC) $(CFLAGS) $^ -o $@ $(LIBS)
 TcpConnection_test.o:TcpConnection_test.cpp TcpConnection.cpp 
 	$(CC) $(CFLAGS) -c $^ -I  include/ 
-TcpConnection_test:TcpConnection_test.o TcpConnection.o TcpServer.o Acceptor.o DefaultPoller.o Epoll.o Poller.o Poll.o Channel.o EventLoop.o Timer.o signal.o CurrentThread.o TimeStamp.o TimerQueue.o SocketOps.o Socket.o InetAddress.o Buffer.o Logger.o LogStream.o EventLoopThreadPool.o EventThreadLoop.o Thread.o CountDownLatch.o
+TcpConnection_test:TcpConnection_test.o TcpConnection.o TcpServer.o Acceptor.o DefaultPoller.o Epoll.o Poller.o Poll.o Channel.o EventLoop.o Timer.o Signal.o CurrentThread.o TimeStamp.o TimerQueue.o SocketOps.o Socket.o InetAddress.o Buffer.o Logger.o LogStream.o EventLoopThreadPool.o EventThreadLoop.o Thread.o CountDownLatch.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LIBS)
 TcpServer_test.o:TcpServer_test.cpp  TcpServer.cpp Acceptor.cpp InetAddress.cpp EventLoop.cpp CurrentThread.cpp
 	$(CC) $(CFLAGS) -c $^ -I  include/ 
-TcpServer_test:TcpServer_test.o TcpConnection.o TcpServer.o Acceptor.o DefaultPoller.o Epoll.o Poller.o Poll.o Channel.o EventLoop.o Timer.o signal.o CurrentThread.o TimeStamp.o TimerQueue.o SocketOps.o Socket.o InetAddress.o Buffer.o Logger.o LogStream.o Thread.o CountDownLatch.o EventLoopThreadPool.o EventThreadLoop.o CountDownLatch.o
+TcpServer_test:TcpServer_test.o TcpConnection.o TcpServer.o Acceptor.o DefaultPoller.o Epoll.o Poller.o Poll.o Channel.o EventLoop.o Timer.o Signal.o CurrentThread.o TimeStamp.o TimerQueue.o SocketOps.o Socket.o InetAddress.o Buffer.o Logger.o LogStream.o Thread.o CountDownLatch.o EventLoopThreadPool.o EventThreadLoop.o CountDownLatch.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LIBS)
 Buffer_test.o:Buffer_test.cpp 
 	$(CC) $(CFLAGS) -c $^ -I  include/ 
-Buffer_test:Buffer_test.o Buffer.o 
+Buffer_test:Buffer_test.o Buffer.o Logger.o LogStream.o TimeStamp.o CurrentThread.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LIBS)
 Connector_test.o:Connector_test.cpp 
 	$(CC) $(CFLAGS) -c $^ -I  include/ 
-Connector_test:Connector_test.o Connector.o Poll.o EventLoop.o DefaultPoller.o Poll.o Poller.o Epoll.o Timer.o TimeStamp.o TimerQueue.o signal.o Channel.o  Logger.o LogStream.o CurrentThread.o SocketOps.o Socket.o InetAddress.o 
+Connector_test:Connector_test.o Connector.o Poll.o EventLoop.o DefaultPoller.o Poll.o Poller.o Epoll.o Timer.o TimeStamp.o TimerQueue.o Signal.o Channel.o  Logger.o LogStream.o CurrentThread.o SocketOps.o Socket.o InetAddress.o 
 	$(CC) $(CFLAGS) $^ -o $@ $(LIBS)
 TcpClient_test.o:TcpClient_test.cpp 
 	$(CC) $(CFLAGS) -c $^ -I  include/ 
-TcpClient_test:TcpClient_test.o TcpClient.o EventLoop.o Channel.o DefaultPoller.o Epoll.o Poller.o Poll.o Timer.o TimerQueue.o CurrentThread.o signal.o TimeStamp.o SocketOps.o InetAddress.o Socket.o Connector.o Logger.o LogStream.o 
+TcpClient_test:TcpClient_test.o TcpClient.o EventLoop.o Channel.o DefaultPoller.o Epoll.o Poller.o Poll.o Timer.o TimerQueue.o CurrentThread.o Signal.o TimeStamp.o SocketOps.o InetAddress.o Socket.o Connector.o Logger.o LogStream.o TcpConnection.o Buffer.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LIBS)
 EventLoop_test.o:EventLoop_test.cpp 
 	$(CC) $(CFLAGS) -c $^ -I  include/ 
-EventLoop_test:EventLoop_test.o EventLoop.o Channel.o DefaultPoller.o Epoll.o Poller.o Poll.o TimerQueue.o Timer.o CurrentThread.o signal.o TimeStamp.o Thread.o CountDownLatch.o Condition.o  Logger.o LogStream.o
+EventLoop_test:EventLoop_test.o EventLoop.o Channel.o DefaultPoller.o Epoll.o Poller.o Poll.o TimerQueue.o Timer.o CurrentThread.o Signal.o TimeStamp.o Thread.o CountDownLatch.o Condition.o  Logger.o LogStream.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LIBS)
 EventThreadLoop_test.o:EventThreadLoop_test.cpp 
 	$(CC) $(CFLAGS) -c $^ -I  include/ 
-EventThreadLoop_test:EventThreadLoop_test.o EventThreadLoop.o EventLoopThreadPool.o EventLoop.o Poller.o Poller.o DefaultPoller.o Poll.o Epoll.o Channel.o CurrentThread.o signal.o Timer.o TimerQueue.o CountDownLatch.o Logger.o LogStream.o Condition.o TimeStamp.o Thread.o TcpServer.o Socket.o SocketOps.o InetAddress.o Buffer.o TcpConnection.o Acceptor.o
+EventThreadLoop_test:EventThreadLoop_test.o EventThreadLoop.o EventLoopThreadPool.o EventLoop.o Poller.o Poller.o DefaultPoller.o Poll.o Epoll.o Channel.o CurrentThread.o Signal.o Timer.o TimerQueue.o CountDownLatch.o Logger.o LogStream.o Condition.o TimeStamp.o Thread.o TcpServer.o Socket.o SocketOps.o InetAddress.o Buffer.o TcpConnection.o Acceptor.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LIBS)
 EventLoopThreadPool_test.o:EventLoopThreadPool_test.cpp 
 	$(CC) $(CFLAGS) -c $^ -I  include/ 
-EventLoopThreadPool_test:EventLoopThreadPool_test.o EventLoopThreadPool.o EventLoop.o Poll.o Poller.o DefaultPoller.o Epoll.o EventThreadLoop.o  Timer.o TimerQueue.o Channel.o CurrentThread.o Logger.o LogStream.o signal.o TimeStamp.o  Poll.o Thread.o CountDownLatch.o EventThreadLoop.o
+EventLoopThreadPool_test:EventLoopThreadPool_test.o EventLoopThreadPool.o EventLoop.o Poll.o Poller.o DefaultPoller.o Epoll.o EventThreadLoop.o  Timer.o TimerQueue.o Channel.o CurrentThread.o Logger.o LogStream.o Signal.o TimeStamp.o  Poll.o Thread.o CountDownLatch.o EventThreadLoop.o
+	$(CC) $(CFLAGS) $^ -o $@ $(LIBS)
+SignalFd_test.o:SignalFd_test.cpp 
+	$(CC) $(CFLAGS) -c $^ -I  include/ 
+SignalFd_test:SignalFd_test.o Signal.o Poll.o Poller.o EventLoop.o Epoll.o Timer.o TimeStamp.o TimerQueue.o LogStream.o Logger.o SocketOps.o Socket.o Channel.o CurrentThread.o CountDownLatch.o Thread.o DefaultPoller.o
+	$(CC) $(CFLAGS) $^ -o $@ $(LIBS)
+TcpClient1_test.o:TcpClient1_test.cpp 
+	$(CC) $(CFLAGS) -c $^ -I  include/ 
+TcpClient1_test:TcpClient1_test.o TcpClient.o TcpConnection.o Connector.o SocketOps.o Socket.o InetAddress.o LogStream.o Logger.o Channel.o Poll.o Poller.o Epoll.o EventLoop.o CurrentThread.o DefaultPoller.o Timer.o TimeStamp.o TimerQueue.o Signal.o Buffer.o CountDownLatch.o 
 	$(CC) $(CFLAGS) $^ -o $@ $(LIBS)
 .PHONY :clean 
 clean:

@@ -69,9 +69,9 @@ inline Logger::LogLevel Logger::nowLogLevel(){
 }
 
 #define LOG_TRACE if( Logger::nowLogLevel()<= Logger::LogLevel::TRACE ) \
-        Logger(__FILE__,Logger::LogLevel::TRACE,__LINE__,__func__).getBuffer()
+        Logger(__FILE__,Logger::LogLevel::TRACE,__LINE__).getBuffer()
 #define LOG_DEBUG if(Logger::nowLogLevel()<=Logger::LogLevel::DEBUG) \
-        Logger(__FILE__,Logger::LogLevel::DEBUG,__LINE__,__func__).getBuffer()
+        Logger(__FILE__,Logger::LogLevel::DEBUG,__LINE__).getBuffer()
 #define LOG_INFO Logger(__FILE__,Logger::LogLevel::INFO,__LINE__).getBuffer()
 #define LOG_WARN Logger(__FILE__,Logger::LogLevel::WARN,__LINE__,__func__).getBuffer()
 #define LOG_ERROR Logger(__FILE__,Logger::LogLevel::ERROR,__LINE__,__func__).getBuffer()

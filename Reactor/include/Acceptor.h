@@ -27,7 +27,7 @@ class Acceptor{
     private:
         
         void bind(InetAddress *address);
-        void handlerRead();
+        void handleRead();
         EventLoop *loop_;
         std::atomic<bool> listening_;
         InetAddress inetAddress_;

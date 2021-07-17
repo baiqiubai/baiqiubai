@@ -2,12 +2,15 @@
 #include "Logger.h"
 #include "CurrentThread.h"
 
-#include <stdlib.h>
+#include <errno.h>
+#include <cstdlib>
 #include <time.h>
+#include <cstring>
 namespace base {
 
 __thread time_t t_lastTime=0;
 __thread char t_Seconds[32]={0};
+__thread int t_errno=0;
 const char *logLevel[Logger::LogLevel::LOG_NUMS]
 ={
 
@@ -47,8 +50,10 @@ nowTime_(TimeStamp::now()){
     
     toFormatTime();
     stream_<<CurrentThread::tid()<<" "<<logLevel[LogLevel_]<<" ";
-            
-
+    
+    if(LogLevel_!=LogLevel::TRACE && LogLevel_!=LogLevel::DEBUG
+            &&LogLevel_ !=LogLevel::INFO)
+        if(errno)stream_<<::strerror(errno)<<" ";
 }
 Logger::Logger(SourceFile file,
         Logger::LogLevel level,
@@ -58,11 +63,12 @@ LogLevel_(level),
 line_(line),
 func_(NULL),
 nowTime_(TimeStamp::now()){
+
     toFormatTime();
     stream_<<CurrentThread::tid()<<" "<<logLevel[LogLevel_]<<" ";
-
-
-
+    if(LogLevel_!=LogLevel::TRACE && LogLevel_!=LogLevel::DEBUG
+            &&LogLevel_ !=LogLevel::INFO)
+        if(errno)stream_<<::strerror(errno)<<" ";
 }
 void Logger::toFormatTime(){
     

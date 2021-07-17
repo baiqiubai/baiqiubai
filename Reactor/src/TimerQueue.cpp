@@ -1,6 +1,6 @@
 
 #include "TimerQueue.h"
-// #include "EventLoop.h"
+#include "EventLoop.h"
 #include "Channel.h"
 #include "Timer.h"
 #include "Logger.h"
@@ -9,6 +9,7 @@
 #include <sys/time.h>
 #include <unistd.h>
 #include <assert.h>
+using namespace base;
 namespace net {
 
 namespace detail {
@@ -18,8 +19,7 @@ namespace detail {
         int timerfd=::timerfd_create(CLOCK_REALTIME,TFD_NONBLOCK|TFD_CLOEXEC);
 
         if(timerfd < 0){
-            perror("timerfd_create error"); 
-            // LOG_ERROR<<"timerfd_create error";
+            LOG_ERROR<<"timerfd_create error";
         }
         
         return timerfd;
@@ -85,7 +85,8 @@ again:
     TimerQueue::TimerQueue(EventLoop *loop)
     :loop_(loop),
     timerFd_(detail::createTimerfd()),
-    timerChannel_(new Channel(loop_,timerFd_)){
+    timerChannel_(new Channel(loop_,timerFd_)),
+    callingExpiredTimers_(false){
    
 
         timerChannel_->setReadCallback(std::bind(&TimerQueue::handlerRead,this));
@@ -113,6 +114,23 @@ again:
             detail::setTimer(timerFd_,timer->time());
 
 
+    }
+    void TimerQueue::cancel(Timer *timer){
+        
+        loop_->runInLoop(std::bind(&TimerQueue::cancelTimer,this,timer));
+    }
+    void TimerQueue::cancelTimer(Timer *timer){
+        
+        Entry entry(timer->time(),timer);
+        auto pos=timers_.find(entry);
+        if(pos!=timers_.end()){
+            
+            size_t n=timers_.erase(entry);
+            assert(n==1);
+        }else if(callingExpiredTimers_){ //自己注销自己
+            cancelTimers_.insert(timer);
+        }
+    
     }
     std::vector<TimerQueue::Entry> TimerQueue::getExpired(const base::TimeStamp &now){
     
@@ -142,7 +160,8 @@ again:
 
         for(auto it=expired.begin();it!=expired.end();++ it){
             
-            if(it->second->repeat()){
+            if(it->second->repeat()
+                    &&cancelTimers_.find(it->second)==cancelTimers_.end()){
                 it->second->resetTimer(now);
                 insert(it->second);
             }else {
@@ -165,15 +184,21 @@ again:
     
     }
     void TimerQueue::handlerRead(){
+    
+
         std::vector<Entry> expired; 
         detail::readTimerfd(timerFd_);    
-
+        
+        callingExpiredTimers_=true;
+        cancelTimers_.clear();
         base::TimeStamp now(base::TimeStamp::now());
+
+
         expired=getExpired(now);
         for(auto timer:expired){
             timer.second->run();
         }
-        
+        callingExpiredTimers_=false;
         reset(expired,now);
     }
 

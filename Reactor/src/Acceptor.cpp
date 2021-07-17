@@ -1,6 +1,11 @@
 
 #include "Acceptor.h"
 #include "Channel.h"
+#include "SocketOps.h"
+
+#include "Logger.h"
+#include "LogStream.h"
+using namespace base;
 namespace net {
 
     Acceptor::Acceptor(EventLoop *loop,const InetAddress &addr)
@@ -10,7 +15,7 @@ namespace net {
     socket_(),
     socketChannel_(new Channel(loop_,socket_.fd())){
             
-        socketChannel_->setReadCallback(std::bind(&Acceptor::handlerRead,this));    
+        socketChannel_->setReadCallback(std::bind(&Acceptor::handleRead,this));    
         socket_.setResuePort(true);
     }
 
@@ -20,6 +25,7 @@ namespace net {
     }
     void Acceptor::listen(){
     
+        LOG_DEBUG<<"Acceptor::listen fd:"<<socket_.fd();
         listening_=true;
     
     
@@ -30,15 +36,17 @@ namespace net {
 
     }
 
-    void Acceptor::handlerRead(){
+    void Acceptor::handleRead(){
     
         int connfd=sockets::accept(socket_.fd());   
-
         if(connfd <0 ){
 
             sockets::close(connfd);
-        }else 
+        }else{ 
+            LOG_DEBUG<<"Acceptor::handleRead Accept connfd:"<<connfd;
+            sockets::setNonBlocking(connfd);
             if(newConnectionCallback_)newConnectionCallback_(connfd);
+        }
     }
 
 

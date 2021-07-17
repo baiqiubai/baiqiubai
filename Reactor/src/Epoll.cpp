@@ -1,9 +1,13 @@
 
 #include "Epoll.h"
 #include "Channel.h"
+#include "Logger.h"
+#include "LogStream.h"
 
+#include <vector>
 #include <unistd.h>
 #include <assert.h>
+using namespace base;
 namespace net {
 namespace {
     
@@ -11,7 +15,19 @@ const int kNew=-1;
 const int kAdded=0;
 const int kDeleted=2;
 
+struct Operation{
+    Operation()=default;
+     ~Operation()=default;
+    static std::string getOperation(int operation){
+        
+        if(operation==1)return std::string("EPOLL_CTL_ADD");
+        else if(operation==2)return  std::string("EPOLL_CTL_DEL");
+        else return std::string("EPOLL_CTL_MOD");
+    }
+    
+};
 }
+    
 
     Epoll::Epoll()
     :Poller(),
@@ -19,8 +35,8 @@ const int kDeleted=2;
     events_(kInitEventSize){
     
         if(epollfd_ < 0){
-            
-            perror("epoll_create error");
+        
+            LOG_SYSFATAL<<"epoll_create1 error";
         }
     
     }
@@ -28,7 +44,7 @@ const int kDeleted=2;
         
         if(::close(epollfd_)){
         
-        
+            LOG_ERROR<<"close error";
         }
     }
     
@@ -41,6 +57,10 @@ const int kDeleted=2;
         int index=channel->index();
     
         int fd=channel->fd();
+
+        LOG_DEBUG<<"Epoll::remove fd: "<<fd;
+
+        
         assert(channelMap_.find(fd)!=channelMap_.end());
 
         assert(index==kDeleted||index==kAdded);
@@ -95,9 +115,13 @@ const int kDeleted=2;
         assert(channelMap_.find(fd)!=channelMap_.end());
     
         struct epoll_event ep;
+        ep.events=channel->events();
         ep.data.ptr=channel;
-        if(::epoll_ctl(epollfd_,operation,fd,&ep)){
-         
+
+        LOG_DEBUG<<"Epoll::update fd: "<<fd<<" Operation:"<<Operation::getOperation(operation)<<" Events:"<<ep.events;
+
+        if(::epoll_ctl(epollfd_,operation,fd,&ep)==-1){
+            LOG_SYSFATAL<<"epoll_ctl error";
         }
             
     }
@@ -121,13 +145,15 @@ const int kDeleted=2;
     void Epoll::poll(std::vector<Channel*> *activeChannel,int timeout){
     
         int numsEvent=::epoll_wait(epollfd_,&*events_.begin(),events_.size(),timeout);
-        if(numsEvent >0 ){
+        if(numsEvent >=0 ){
         
             fillActiveChannel(activeChannel,numsEvent);
             if(static_cast<size_t>(numsEvent)==events_.size()){
                 events_.resize(2*events_.size());
             
             }
+        }else if(numsEvent<0){
+            LOG_ERROR<<"epoll_wait error";
         }
     
     }

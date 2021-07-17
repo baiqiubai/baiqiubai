@@ -1,6 +1,9 @@
 
 #include "Socket.h"
+#include "Logger.h"
+#include "LogStream.h"
 
+using namespace base;
 namespace net {
 
     Socket::Socket():sockfd_(sockets::createNonBlockingSockfd()){
@@ -25,7 +28,7 @@ namespace net {
         sockets::listen(sockfd_);
     }
     Socket::~Socket(){
-    
+        LOG_DEBUG<<"Socket::~Socket sockfd_:"<<sockfd_;    
         sockets::close(sockfd_);
 
     }

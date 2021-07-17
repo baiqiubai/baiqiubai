@@ -3,6 +3,8 @@
 #include "EventLoop.h"
 #include "Logger.h"
 #include "LogStream.h"
+
+
 #include <unistd.h>
 
 using namespace base;
@@ -22,21 +24,22 @@ namespace net {
     state_(Connecting),
     highWaterMark_(64*1024*1024){
     
-        tcpConnectionChannel_->setReadCallback(std::bind(&TcpConnection::handlerRead,this));
-        tcpConnectionChannel_->setCloseCallback(std::bind(&TcpConnection::handlerClose,this));
-        tcpConnectionChannel_->setErrorCallback(std::bind(&TcpConnection::handlerError,this));
-        tcpConnectionChannel_->setWriteCallback(std::bind(&TcpConnection::handlerWrite,this));
+
+        tcpConnectionChannel_->setReadCallback(std::bind(&TcpConnection::handleRead,this));
+        tcpConnectionChannel_->setCloseCallback(std::bind(&TcpConnection::handleClose,this));
+        tcpConnectionChannel_->setErrorCallback(std::bind(&TcpConnection::handleError,this));
+        tcpConnectionChannel_->setWriteCallback(std::bind(&TcpConnection::handleWrite,this));
     }
   
 
     TcpConnection::~TcpConnection(){
    
     
-        LOG_INFO<<"TcpConnection destructor";
+        LOG_INFO<<"TcpConnection::~TcpConnection Name:"<<connName_;
     }
 
     void TcpConnection::connectEstablished(){
-    
+        LOG_DEBUG<<"TcpConnection::connectEstablished";
         setState(Connected);
         tcpConnectionChannel_->enableReading();
         if(connectionCallback_)connectionCallback_(shared_from_this());
@@ -45,58 +48,71 @@ namespace net {
         
         tcpConnectionChannel_->remove();
     }
-    
-    void TcpConnection::sendInLoop(const std::string &message){
-        size_t len=message.size();
-        ssize_t nwrite;
-        size_t remain;
-        if(outputBuffer_.readAbleSpace()==0){//没有还未读走的数据
-            nwrite=::write(tcpSocket_.fd(),message.data(),len);
-            if(nwrite >= 0){
-                remain=len-nwrite;
-                if(remain ==0 ){
-                    if(writeCompleteCallback_)
-                        loop_->queueInLoop(std::bind(writeCompleteCallback_,shared_from_this()));
-                }
-            }else {
-                if(errno!=EAGAIN)
-                    LOG_ERROR<<"send error";
-            }
-        } 
-        if(nwrite < len){//一次没有写完加入output下次继续写
-            size_t oldlen=outputBuffer_.readAbleSpace();
-            if(oldlen + remain >=highWaterMark_ && highWaterMarkCallback_){
-                loop_->queueInLoop(std::bind(highWaterMarkCallback_,shared_from_this()));
-            }
-            outputBuffer_.append(message.data()+nwrite,len-nwrite);
-            if(!tcpConnectionChannel_->isWriting()){
-                tcpConnectionChannel_->enableWriting();
-            }
-        }
-
-    }
-    void TcpConnection::send(const std::string &message){
-    
+   void TcpConnection::send(const char*message,size_t datalen){
         
-        loop_->runInLoop(std::bind(&TcpConnection::sendInLoop,this,message));
 
+        loop_->runInLoop(std::bind(&TcpConnection::sendInLoop,this,message,datalen));
+    }
+    void TcpConnection::sendInLoop(const char*message,size_t datalen){
+   
+        if(!tcpConnectionChannel_->isWriting()&&outputBuffer_.totalSize()==0){
+            outputBuffer_.bufferAdd(datalen,message);
+            size_t remain=datalen; 
+            ssize_t nwrite=outputBuffer_.writeIovec(tcpSocket_.fd(),remain);
+            
+            if(static_cast<size_t>(nwrite)<remain)
+                tcpConnectionChannel_->enableWriting(); //一次没有写完/ 
+            else 
+                if(writeCompleteCallback_)loop_->runInLoop(std::bind(writeCompleteCallback_,shared_from_this()));
+
+            LOG_DEBUG<<"TcpConnection::sendInLoop Write:"<<static_cast<int>(nwrite)<<" Bytes ";
+            if(nwrite>0)outputBuffer_.bufferDrain(nwrite);
+            
+        
+        }else {
+             outputBuffer_.bufferAdd(datalen,message);
+        }
     }
 
     void TcpConnection::shutdown(){
     
+
         loop_->runInLoop(std::bind(&TcpConnection::shutdownInLoop,
                     this));
     
     }
     void TcpConnection::shutdownInLoop(){
-
+    
+        LOG_DEBUG<<"TcpConnection::shutdownInLoop ";
         if(state_==Connected){
             setState(DisConnecting);
             tcpSocket_.shutdown();
         }
     
     }
-    void TcpConnection::handlerWrite(){
+    void TcpConnection::handleWrite(){ //从outputBuffer中向socket中写数据
+    
+        
+         
+        if(tcpConnectionChannel_->isWriting()) {
+            
+            if(outputBuffer_.totalSize())   {
+                size_t remain=outputBuffer_.totalSize();
+                
+                ssize_t n=outputBuffer_.writeIovec(tcpSocket_.fd(),remain);
+                
+                if(static_cast<size_t>(n)==remain){ //写完所有数据 停止关注事件    
+                    tcpConnectionChannel_->disableWrite();
+                    if(writeCompleteCallback_)loop_->runInLoop(std::bind(writeCompleteCallback_,shared_from_this()));
+                }
+                if(n>0)outputBuffer_.bufferDrain(n);
+                LOG_DEBUG<<"TcpConnection::handleWrite Write:"<<static_cast<int>(n)<<" Bytes";
+            } 
+
+        }     
+
+    }
+  /*  void TcpConnection::handleWrite(){
     
         
         if(tcpConnectionChannel_->isWriting()){
@@ -104,15 +120,14 @@ namespace net {
             ssize_t n=::write(tcpSocket_.fd(),outputBuffer_.readAbleStart(),
                     outputBuffer_.readAbleSpace()); 
 
-            if( n>0){
+            if(n>=0){
                 outputBuffer_.retireve(n);
                 if(outputBuffer_.readAbleSpace()==0){ //停止关注事件
                     tcpConnectionChannel_->disableWrite();              
                     if(writeCompleteCallback_)loop_->queueInLoop(std::bind(writeCompleteCallback_,shared_from_this()));
                 }
             }else {
-                
-                LOG_ERROR<<"handlerWrite error";
+                LOG_ERROR<<"handleWrite error";
             }
         }
     
@@ -120,34 +135,35 @@ namespace net {
     
     
     
-    }
-    void TcpConnection::handlerRead(){
+    }*/
+    void TcpConnection::handleRead(){
     
-        size_t n=inputBuffer_.readFd(tcpSocket_.fd());
-
+        // size_t n=inputBuffer_.readFd(tcpSocket_.fd());
+        size_t n=inputBuffer_.bufferRead(tcpSocket_.fd());
+        LOG_DEBUG<<"TcpConnection::handleRead Read:"<<static_cast<int>(n)<<" Bytes ";
         if(n > 0 ){
             messageCallback_(shared_from_this(),&inputBuffer_);
         }else if(n==0){
-            handlerClose();
+            handleClose();
         }else {
             
-            handlerError();
+            handleError();
         }
         
         
     }
 
-    void TcpConnection::handlerClose(){
-        
+    void TcpConnection::handleClose(){
+            LOG_DEBUG<<"TcpConnection::handleClose ";
             setState(DisConnected);
-            tcpConnectionChannel_->disableAll(); //必须在此时取消对所有事件的关注 LT 模式否则多次触发handlerClose
+            tcpConnectionChannel_->disableAll(); //必须在此时取消对所有事件的关注 LT 模式否则多次触发handleClose
             closeCallback_(shared_from_this());
     }
         
     
-    void TcpConnection::handlerError(){
+    void TcpConnection::handleError(){
     
-        
+         
         LOG_ERROR<<"readFd error";
     }
 

@@ -1,10 +1,34 @@
 
 #include "Channel.h"
 #include "EventLoop.h"
+#include "Logger.h"
+#include "LogStream.h"
+
 
 #include <assert.h>
-namespace net {
 
+using namespace base;
+namespace net {
+namespace detail{
+
+    std::string getReventsName(int revents){
+        
+        std::string res("[");
+        if(revents & POLLIN)
+            res+="POLLIN ";
+        if(revents & POLLOUT)
+            res+="POLLOUT ";
+        if(revents & POLLERR)
+            res+="POLLERR ";
+        if(revents & POLLHUP)
+            res+="POLLHUP ";
+        res+="]";
+        return res;
+
+    }
+
+
+}
 Channel::Channel(EventLoop *loop,int fd)
 :loop_(loop),
 fd_(fd),
@@ -30,6 +54,11 @@ void Channel::remove(){
 void Channel::handlerEvent(){
 
     channelNoDestructor_=true;
+    
+    LOG_DEBUG<<"Channel::handlerEvent Events: "<<detail::getReventsName(revents_);
+    if((revents_ & POLLHUP))
+        if(errorCallback_)errorCallback_();
+
     if((revents_&POLLERR))
         if(closeCallback_)closeCallback_();
 
@@ -39,6 +68,7 @@ void Channel::handlerEvent(){
 
     if((revents_&POLLOUT))
         if(writeCallback_)writeCallback_();
+
 
     channelNoDestructor_=false;
 

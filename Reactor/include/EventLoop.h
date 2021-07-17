@@ -4,7 +4,7 @@
 
 #include "CurrentThread.h"
 #include "Mutex.h"
-
+#include "Signal.h"
 
 #include <vector>
 #include <atomic>
@@ -16,6 +16,7 @@ namespace net {
 namespace detail{
 
     int createEventFd();
+    std::string getReventsName(int revents);
 
 }
 
@@ -23,7 +24,7 @@ namespace detail{
 class Channel;
 class Poller;
 class TimerQueue;
-class SignalInfo;
+// class Signal;
 class EventLoop{
 
     public:
@@ -45,59 +46,45 @@ class EventLoop{
         void assertInLoop(){if(!isInLoop())abort();}
         bool isInLoop()const{return base::CurrentThread::tid()==loopTid_;}
 
-        void setSignal(int signals,Functor func); 
-        void delSignal(int signals);
-
+        // void setSignal(int signals,Functor func);
+        // void delSignal(int signals);
+        
+        void setSignal(uint32_t signo,Functor func);
+        void delSignal(uint32_t signo);
         void runAt(const Functor &cb,double delay);
 
         void runAfter(const Functor&cb,double delay);
 
         void runEvery(const Functor&cb,double interval);
 
-        //优先级 为 1 2 3 
-        void setEventPriority(const char *event,int priority);
-        int getEventPriority(const char*filename);
         
-        const char * getEventName(int priority);
-
-        void pushPriorityQueue();
-        
-        std::vector<Channel*> getVecByEventName(const char*event);
         void setPollInterval(int timeout);
 
     private:
 
         void wakeup();
-        void readEventFd();
-        void foreachEventChannel(const std::vector<Channel*> &channel);
-        void foreachPriorityQueue();
-        
-        void initDefaultPriority();
         void doPendingFunctors();
-        using ChannelVec=std::vector<Channel*>;
-        
-        ChannelVec activeChannel_;
-        ChannelVec signalChannel_;
-        ChannelVec timerChannel_;
+    
+        void readEventFd();
         std::atomic<bool> start_;
         
+        std::vector<Channel*> activeChannel_;
         pid_t loopTid_;
         std::unique_ptr<Poller> poller_;
 
         std::unique_ptr<TimerQueue> timerQueue_;
 
-        std::unique_ptr<SignalInfo> signalInfo_;
+        // std::unique_ptr<SignalInfo> signalInfo_;
         
+        std::unique_ptr<Signal> signal_;
         std::unique_ptr<Channel> wakeupChannel_; //使得能从poll阻塞中唤醒
 
         base::MutexLock mutex_;
         
         int pollInterval_;
-        std::unordered_map<int,const char*> defaultPriority_;
         std::vector<Functor> pendingFunctors_;
 
         std::atomic<bool> callingPendFunctors_;
-        std::vector<std::vector<Channel*>> priorityQueue_;
 };
 
 

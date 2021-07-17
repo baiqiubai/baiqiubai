@@ -30,7 +30,7 @@ void ChangeFlush(){
 void test (const char* type,int num){
 
     Logger::setLogLevel(Logger::LogLevel::TRACE);
-    Logger::setOutput(ChangeOutput);
+    // Logger::setOutput(ChangeOutput);
     Logger::setFlush(ChangeFlush);
 
     fp=fopen(type,"w");
@@ -42,8 +42,10 @@ void test (const char* type,int num){
     std::string buf(3000,'a');
 
     for(int i=0;i<num;++i){
-        
+        LOG_TRACE<<"hello world";
+        LOG_DEBUG<<"hello ";
         LOG_INFO<<"hello world";
+        LOG_WARN<<"hehe"; 
     }
 
     TimeStamp end(TimeStamp::now());

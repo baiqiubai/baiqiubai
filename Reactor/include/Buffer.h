@@ -1,175 +1,140 @@
 
 #ifndef BUFFER_NET_H_
 #define BUFFER_NET_H_
+#include "noncopyable.h"
 
+#include <sys/uio.h>
+#include <functional>
 #include <iostream>
 #include <cstring>
-#include <vector>
 namespace net {
+class BufferChain;
+namespace detail{
+    
+    extern size_t kDefaultAllocSize;
+    BufferChain *createNewBufferChain(size_t totalSize,
+            size_t misalign=0);
 
-const int kDefaultSize=1024;
-#define BUFFERSIZE sizeof(Buffer)
-class Buffer{
-    public:
-        Buffer(size_t dataSize=kDefaultSize)
-        :readAbleIndex_(0),
-        writeAbleIndex_(0)
+    size_t getSockfdBytes(int sockfd); //获取fd中字节
+}
+class BufferChain{
+    friend class Buffer;
+public:
+    BufferChain()
+        :next_(NULL),
+        bufferSize_(0),
+        misalign_(0),
+        off_(0),
+        buffer_(NULL)
     {
-         buffer_.reserve(dataSize);
-    }
-    
-
-    size_t readAbleIndex()const{return readAbleIndex_;}    
-    size_t writeAbleIndex()const{return writeAbleIndex_;}
-
-    size_t readAbleSpace(){return writeAbleIndex_-readAbleIndex_;}
-    size_t writeAbleSpace(){return buffer_.capacity()-writeAbleIndex_;}
-
-    char* readAbleStart(){return &*readAbleIter();}
-
-    char* writeAbleStart(){return &*writeAbleIter();}
-
-    std::vector<char>::iterator readAbleIter(){return begin()+readAbleIndex_;}
-    std::vector<char>::iterator writeAbleIter(){return begin()+writeAbleIndex_;}
-
-
-    size_t readFd(int fd);
-
-
-    void append(const char*msg,size_t len){
-    
-        hasensureWritespace(len);
-        std::copy(msg,msg+len,writeAbleIter());
-        writeAbleIndex_+=len;
-    
-    }
-    size_t capacity(){return buffer_.capacity();}
-    void hasensureWritespace(size_t len){
-        if(len > writeAbleSpace()){
-            makeSpace(len);
-        }
-    }
-    
-    std::string retireveAsString(size_t len){
-        
-        
-        std::string res(readAbleIter(),readAbleIter()+len);
-        retireve(len);
-        return res;
         
     }
-    void retireve(size_t len){
-    
-        if(len < readAbleSpace()){
-            readAbleIndex_+=len;
-            
-        }else {
-       
-            retireveAll();
-        }
-    }
-    void retireveAll(){
-    
-        readAbleIndex_=0;
-        writeAbleIndex_=0;
-
+    ~BufferChain(){
+     
+        delete []buffer_;
+        buffer_=NULL;
     }
     
-    private:
+    BufferChain(const BufferChain& chain){
+        size_t size=chain.bufferSize();
+        buffer_=new char[size];
+        ::memcpy(buffer_,chain.buffer_+chain.misalign_+chain.off_,chain.off_);
+    }
+    BufferChain& operator=(BufferChain &chain){
+        
+        return *this;
+    }
+    BufferChain(size_t allocSize,size_t misalign=0):
+        next_(NULL),
+        bufferSize_(allocSize),
+        misalign_(misalign),
+        off_(0),
+        buffer_(NULL)
+    {
+    
+        buffer_=new char[allocSize];
+    }
 
-        void makeSpace(size_t len){
-       
-            if(readAbleSpace() + len <capacity()){
-                
-                size_t readable=readAbleSpace();
-                std::copy(readAbleIter(),writeAbleIter(),begin());
-                readAbleIndex_=0;
-                writeAbleIndex_=readable; 
-            
-            }else {
-                size_t readAble=readAbleSpace();        
-                buffer_.resize(readAble+len);
-            }
-         /*   if(readAbleIndex_ +writeAbleSpace() < len){
-                
-                buffer_.resize(writeAbleIndex_+len);
-            }else {
-                size_t readable=readAbleSpace();
-                std::copy(readableIter(),writeableIter(),begin());
-                readAbleIndex_=0;
-                writeAbleIndex_=readable;
+    size_t bufferSize()const{return bufferSize_;}
+    size_t misalign()const{return misalign_;}
+    size_t off()const{return off_;}
 
-            }
-           */ 
-        }
-        std::vector<char>::iterator begin(){return buffer_.begin();}
-        size_t readAbleIndex_;
-        size_t writeAbleIndex_;
-        std::vector<char> buffer_;
+    void setOff(size_t off){off_=off;}
+    char *buffer(){return buffer_;}
 
+    bool shouldRealign(size_t dataSize);
+    
+    void Realign();
+private:
+    
+    BufferChain *next_;
 
+    size_t bufferSize_;//分配的BufferChain总大小
+    size_t misalign_;//偏移不用的
+    
+    size_t off_; //写了多少字节
+
+    char *buffer_;//指向分配的空间
 };
-/*class Buffer{
-    public:
-        
-        Buffer(size_t bufferSize=kDefaultSize,
-             size_t misalign=0  )
-            :bufferSize_(bufferSize),
-            misalign_(misalign),
-            off_(0){
-                buffer_=new char[bufferSize];  
-            }
 
-        void append(const char*msg,size_t len){
-        
-            if(len > bufferSize_){
-                
-                if(shouldRealign(len)){
-                    Realign();
-                    
-                    off_+=len;
-                }else {
-                    
-                    size_t size=bufferSize_+len;
-                    reAlloc(size);
-                }
-            
-            } 
-        
-        
-        
-        
-        }
-        
-    private:
-        void reAlloc(size_t size){
-        
-        
-        
-        }
-        bool shouldRealign(size_t len){
-            
-            return bufferSize_-off_ > len;
-        }
-        void Realign(){
-             
-            ::memmove(buffer_,buffer_+misalign_+off_,off_);
-            misalign_=0;
-        }
-        size_t bufferSize_;
+class Buffer:public base::noncopyable{
 
-        size_t misalign_;
+public:
+    Buffer():
+        first_(NULL),
+        last_(NULL),
+        lastWithData_(&first_),
+        totalSize_(0)
+    {
+    }
+    
+    using BufferCallback=std::function<void()>;
+    size_t totalSize()const{return totalSize_;}
+    ~Buffer()=default;
+    void bufferAdd(size_t dataSize,const char *data);
 
-        size_t off_; //写的字节数
-
-        char *buffer_;
+    void foreachWithDataChain();
+    
+    void bufferRead(char *buf,size_t datalen); //用户使用的函数
+    //从buffer中remove datalen字节 
 
 
+    void bufferInsertChain(BufferChain *chain);
+    BufferChain *first(){return first_;}
+    BufferChain *last(){return last_;}
+    BufferChain **lastWithData(){return lastWithData_;}
+
+    size_t bufferRead(int sockfd);  //用户不能使用
+    ssize_t writeIovec(int sockfd,size_t howmuch);
+    void bufferDrain(size_t len);
+
+
+private:
+    void  bufferExpandFast(size_t n,int IovecNum);
+    //利用iovec快速预留空间 
+    //
+    int bufferSetUpVecs(size_t n,struct iovec *vecs,int numIovec);
+
+    int bufferCopyout(char *dataOut,size_t len);
+    int  afterChainisEmpty(BufferChain *chain);
+    void deleteAllChain(); 
+    void deleteAfterChain(BufferChain *chain);
+    
+        
+    BufferChain *first_;//指向第一个bufferChain
+    BufferChain *last_;//指向最后一个bufferchain
+    BufferChain **lastWithData_;//指向最后一个有数据的BufferChain
+
+    size_t totalSize_;
+
+    // BufferCallback bufferCallback_;
 };
+
+
+
 
 
 }
 
-*/
-}
+
 #endif 

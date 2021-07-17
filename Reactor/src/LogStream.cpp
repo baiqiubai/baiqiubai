@@ -60,6 +60,7 @@ LogStream& LogStream::operator<<(unsigned long long val)
     Interger(val);
     return *this;
 }
+
 LogStream& LogStream::operator<<(double val)
 {
     size_t len = snprintf(buffer_.current(), 32, "%.12f", val);

@@ -144,7 +144,7 @@ namespace detail{
                 count_=0;                       
                 rollFile();          
             }else{
-                time_t time=::time(NULL);
+                // time_t time=::time(NULL);
                 
             
             }

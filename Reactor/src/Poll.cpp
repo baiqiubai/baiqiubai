@@ -1,9 +1,13 @@
 
 #include "Poll.h"
 #include "Channel.h"
+#include "Logger.h"
+#include "LogStream.h"
+
 
 #include <assert.h>
 #include <unistd.h>
+using namespace base;
 namespace net {
 
 Poll::Poll()
@@ -17,11 +21,17 @@ Poll::~Poll(){
 }
 void Poll::update(Channel *channel)
 {
+    
     if (channel->index() < 0) {  // new add
-
+        
         int fd = channel->fd();
-        struct pollfd pfd;
 
+        LOG_DEBUG<<"Poll::update fd: "<<fd<<" Operation:POLL_ADD ";
+
+        struct pollfd pfd;
+        
+
+        
         pfd.fd = fd;
         pfd.events = channel->events();
         pfd.revents = 0;
@@ -35,14 +45,16 @@ void Poll::update(Channel *channel)
         channelMap_.insert({fd, channel});
     }
     else {
+
         int index = channel->index();
         struct pollfd &pfd = pollfds_[index];
-
+        
         pfd.fd = channel->fd();
-
+        
+        LOG_DEBUG<<"Poll::update fd: "<<pfd.fd<<" Operation:POLL_DEL ";
         pfd.events =channel->events();
         pfd.revents = 0;
-        
+                
         
         if(channel->isNoneEvent()){
             pfd.fd=-1; 
@@ -52,6 +64,7 @@ void Poll::update(Channel *channel)
 }
 void Poll::remove(Channel *channel)
 {
+    LOG_DEBUG<<"Poll::remove fd: "<<channel->fd();
     if (pollfds_.size() > 0) {
         assert(channel->fd() >= 0);
         
@@ -74,10 +87,6 @@ void Poll::remove(Channel *channel)
         assert(n == 1);
     }
 }
-// void Poll::fillActiveChannel(std::vector<Channel *> *signalChannel,
-                               // std::vector<Channel *> *timerChannel,
-                               // std::vector<Channel *> *activeChannel,
-                               // int nready)
 void Poll::fillActiveChannel(std::vector<Channel*> *activeChannel,int nready)
 {
     for (auto it = pollfds_.begin(); it != pollfds_.end(); ++it) {
@@ -87,44 +96,32 @@ void Poll::fillActiveChannel(std::vector<Channel*> *activeChannel,int nready)
             int revents = it->revents;
         
             auto pos = channelMap_.find(fd);
-            if(pos==channelMap_.end())printf("fd %d\n",fd);
             assert(pos != channelMap_.end());
 
             assert(pos->first == fd);
 
             pos->second->setRevents(revents);
 
-            // if (fd == signalSocketPair_)
-                // signalChannel->emplace_back(pos->second);
-            // else if (fd == timerfd_) {
-                // timerChannel->emplace_back(pos->second);
-            // }
-            // else {
-                activeChannel->emplace_back(pos->second);
-            // }
+            activeChannel->emplace_back(pos->second);
         }
     }
 }
 void Poll::poll(std::vector<Channel*> * activeChannel,
 int timeout)
-// void Poll::poll(std::vector<Channel *> *signalChannel,
-                  // std::vector<Channel *> *timerChannel,
-                  // std::vector<Channel *> *activeChannel, int timeout)
 {
     // again:
 
     int nready = ::poll(&*pollfds_.begin(), pollfds_.size(), timeout);
 
-    if (nready > 0) {
+    if (nready >= 0) {
         fillActiveChannel(activeChannel,nready);
-        // fillActiveChannel(signalChannel, timerChannel, activeChannel, nready);
     }
     else if (nready < 0) {
         if (errno == EINTR) {
             // goto again;
         }
         else {
-            perror("poll error");
+            LOG_ERROR<<"poll error";
         }
     }
 }

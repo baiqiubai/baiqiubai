@@ -2,12 +2,12 @@
 #ifndef TCPCONNECTION_NET_H_
 #define TCPCONNECTION_NET_H_
 
-#include <memory>
 #include "Buffer.h"
 #include "Callback.h"
 #include "Channel.h"
 #include "InetAddress.h"
 #include "Socket.h"
+#include <memory>
 
 namespace net {
 
@@ -46,7 +46,9 @@ public:
     InetAddress &localAddress(){return localAddress_;}
     InetAddress &peerAddress(){return peerAddress_;}
 
-    void send(const std::string &message);
+    // void send(const std::string &message);
+    void send(const char*message,size_t datalen);
+
     enum State { Connecting, Connected, DisConnecting, DisConnected };
     void setState(State s) { state_ = s; }
     State state() { return state_; }
@@ -56,13 +58,19 @@ public:
     void connectEstablished();
 
     EventLoop *getLoop(){return loop_;}
+
+
+    void socketOutbuf(); //给outputbuffer使用
 private:
-    void sendInLoop(const std::string& message);
+    // void sendInLoop(const std::string& message);
+    void sendInLoop(const char *message,size_t datalen);
+
+
     void shutdownInLoop();
-    void handlerWrite();
-    void handlerClose();
-    void handlerError();
-    void handlerRead();
+    void handleWrite();
+    void handleClose();
+    void handleError();
+    void handleRead();
     EventLoop *loop_;
     InetAddress localAddress_;
     InetAddress peerAddress_;
@@ -80,6 +88,8 @@ private:
     HighWaterMarkCallback highWaterMarkCallback_;
     Buffer inputBuffer_;
     Buffer outputBuffer_;
+
+    bool tcpWriting_; 
 };
 
 }  // namespace net

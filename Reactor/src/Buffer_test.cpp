@@ -7,18 +7,14 @@ using namespace net;
 
 void test(){
 
+    printf("test\n");
     Buffer buffer;
-    printf("writeable capacity %ld %ld\n",buffer.writeAbleSpace(),buffer.capacity());
-    char buf[1024];
-    memset(buf,'a',sizeof(buf));
-    buffer.append(buf,sizeof(buf));
     
-    char b[10];
-    buffer.append(b,sizeof(b));
-    printf("writeable capacity %ld %ld\n",buffer.writeAbleSpace(),buffer.capacity());
-
+    char buf[1000];
+    memset(buf,'a',sizeof(buf));
+    buffer.bufferAdd(sizeof(buf),buf);
+    printf("totalSize %ld\n",buffer.totalSize());
 }
-
 int main(){
 
     test();

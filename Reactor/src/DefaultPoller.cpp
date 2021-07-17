@@ -7,10 +7,10 @@ Poller *newDefaultPoller(){
 
     if(::getenv("MY_POLLER_POLL")){
         
-        return new Poll();
+        return new Epoll();
     }else {
     
-        return new Epoll();
+        return new Poll();
     }
 
 

@@ -2,6 +2,7 @@
 
 #include "SocketOps.h"
 
+#include <fcntl.h>
 #include <cstring>
 #include <unistd.h>
 #include <errno.h>
@@ -101,6 +102,11 @@ void inet_ntop(int af, const void *src,char *dst, socklen_t size){
     
     }
 
+}
+void setNonBlocking(int sockfd){
+    int oldOp=fcntl(sockfd,F_GETFL);
+    int newOp=oldOp|O_NONBLOCK;
+    fcntl(sockfd,F_SETFL,newOp);    
 }
 
 uint32_t htonl(uint32_t hostlong){

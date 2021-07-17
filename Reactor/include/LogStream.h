@@ -73,6 +73,7 @@ class LogStream{
         LogStream& operator<<(double );
         LogStream& operator<<(unsigned int );
         LogStream& operator<<(unsigned long long);
+        // LogStream& operator<<(unsigned long);
         LogStream& operator<<(float val){
             
             *this<<static_cast<double>(val);

@@ -25,6 +25,7 @@ namespace net {
     void TcpServer::setThreadNum(int threadNum){
     
         threadPool_->setThreadNum(threadNum);
+        LOG_DEBUG<<"Base Loop Tid:"<<loop_->loopTid();
     }
     void TcpServer::start(){
         
@@ -38,7 +39,8 @@ namespace net {
         
     }
     void TcpServer::removeConnection(const TcpConnectionPtr&conn){
-    
+        
+        LOG_DEBUG<<"removeConnection Name:"<<conn->name();  
         size_t n=connections_.erase(conn->name());
         assert(n==1);
 
@@ -51,6 +53,7 @@ namespace net {
     void TcpServer::OnConnection(int sockfd){
     
         
+        
         char buf[32]={0};
         snprintf(buf,sizeof(buf),"%d",sockfd);
         std::string name=name_;
@@ -62,10 +65,9 @@ namespace net {
         
         InetAddress peerAddress;
         sockets::getpeername(sockfd,&peerAddress);
+        
 
-        // LOG_INFO<<"peerAddress ip "<<peerAddress.ip()<<" peerAddress port "<<peerAddress.port();
-
-        LOG_INFO<<"TcpConnection Name: "<<name<<"\n";
+        LOG_DEBUG<<"TcpConnection Name: "<<name<<" IO LOOP "<<ioLoop->loopTid( );
         std::shared_ptr<TcpConnection> conn(new TcpConnection(ioLoop,localAddress,
                     peerAddress,sockfd,name));
     
@@ -77,6 +79,7 @@ namespace net {
         conn->setConnectionCallback(connectionCallback_);
         conn->setMessageCallback(messageCallback_);
         connections_[name]=conn;
+        
 
         ioLoop->runInLoop(std::bind(&TcpConnection::connectEstablished,conn));
 

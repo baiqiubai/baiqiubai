@@ -38,11 +38,14 @@ class TimerQueue{
         int timerfd()const{return timerFd_;}
 
         void addTimer(Timer *timer);
+        void cancel(Timer *timer);
     private:
+
+        void cancelTimer(Timer *timer);
         void handlerRead();
         using Entry=std::pair<base::TimeStamp,Timer*>; 
 
-
+        
         using TimerSet=std::set<Entry>;
 
         std::vector<Entry> getExpired(const base::TimeStamp &now);
@@ -56,7 +59,9 @@ class TimerQueue{
         std::unique_ptr<Channel> timerChannel_;
         
         TimerSet timers_;
+        std::set<Timer*> cancelTimers_;
         
+        bool callingExpiredTimers_;
         
 };
 

@@ -29,8 +29,8 @@ class Channel{
         
         bool isWriting(){return events_& kWrite;}
 
-        void disableRead(){events_|=~kRead;update();}
-        void disableWrite(){events_|=~kWrite;update();}
+        void disableRead(){events_&=~kRead;update();}
+        void disableWrite(){events_&=~kWrite;update();}
         void disableAll(){events_=kNone;update()   ;}
         
 
